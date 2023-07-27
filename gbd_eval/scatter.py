@@ -59,7 +59,6 @@ def depenalize(df: pd.DataFrame, solvers: list[str], max=5000):
 def scatter(df: pd.DataFrame, solver1, solver2, groupcol, title=None, max=5000, legend_separate=None, to_latex=None, logscale=False):
     colors = ['#113377','#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#a65628']
     markers = [ '1', 'x', '*', '+', '.' ]
-    df = depenalize(df, [solver1, solver2], max)
     fig, ax = plt.subplots(figsize=(3.5,3.5))
     plt_decorate_scatter_area(min=0, max=max)
     ax.tick_params(axis='both', which='major', labelsize=8)
@@ -82,6 +81,8 @@ def scatter(df: pd.DataFrame, solver1, solver2, groupcol, title=None, max=5000, 
     gf["diff"] = gf[solver1] - gf[solver2]
     gf["adiff"] = gf["diff"].abs()
     gf.sort_values(by='adiff', ascending=False, inplace=True)
+
+    df = depenalize(df.copy(), [solver1, solver2], max)
 
     for i, group in enumerate(gf[groupcol], 0):
         m = markers[i % len(markers)]

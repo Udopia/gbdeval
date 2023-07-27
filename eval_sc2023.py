@@ -72,9 +72,8 @@ def generate():
     dbs = [ 'data/meta.db', 'data/sc2023/results_special_detailed.csv' ]
     with GBD(dbs) as gbd:
         all = get_solvers(gbd, 'results_special_detailed_csv')
-        generate_cdf_and_cactus_plots(gbd, all)
-        generate_cdf_per_family(gbd, all)
-        exit()
+        # generate_cdf_and_cactus_plots(gbd, all)
+        # generate_cdf_per_family(gbd, all)
 
         pairs_to_compare = {
             "sbva_cadical_kissat": [ "SBVA_sbva_cadical", "SBVA_sbva_kissat" ],
