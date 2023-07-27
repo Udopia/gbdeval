@@ -21,15 +21,16 @@ def scores(df: pd.DataFrame):
     return df.mean(numeric_only=True).to_frame().transpose()
 
     
-def scores_group_wise(df: pd.DataFrame, solvers: list[str], groups: list[str]):
+def scores_group_wise(df: pd.DataFrame, solvers: list[str], groups: list[str], sortby: str = "count"):
     #group:
     counts = df.groupby('family').count()["hash"].rename("count")
     groups = df.groupby('family').mean(numeric_only=True)
     tab = groups.merge(counts, on='family', how='left')
     tab.reset_index(inplace=True)
     #reorder:
+    tab["diff"] = tab[solvers].max(axis=1) - tab[solvers].min(axis=1)
+    tab.sort_values(by=sortby, ascending=False, inplace=True)
     tab = tab[["family", "count"] + solvers + ["vbs"]]
-    tab.sort_values(by='count', ascending=False, inplace=True)
     #add all:
     all = scores(df)
     all["family"] = "all"

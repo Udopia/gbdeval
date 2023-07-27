@@ -54,8 +54,8 @@ def generate_family_wise_score_tables(gbd: GBD, solver0: str, solver1: str, name
     df = retrieve.retrieve_penalized_augmented_runtimes(gbd, [ solver0, solver1 ], ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
     vbs = retrieve.retrieve_virtual_best_solver(gbd, [ solver0, solver1 ], "track = main_2023")
     df = df.merge(vbs, on='hash', how='left')
-    tab = scores.scores_group_wise(df, [ solver0, solver1 ], ["family"])
-    tables.table(tab, [ solver0, solver1, "vbs"], ["family"], "gen/sc2023/{}.tex".format(name), 
+    tab = scores.scores_group_wise(df, [ solver0, solver1 ], ["family"], sortby="diff")
+    tables.table(tab, [ solver0, solver1, "vbs" ], ["family"], "gen/sc2023/{}.tex".format(name), 
                  bold_min_of=[ solver0, solver1 ])
     
 def generate_cdf_per_family(gbd: GBD, solvers: list[str]):
