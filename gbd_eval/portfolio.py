@@ -17,6 +17,7 @@
 import pandas as pd
 from itertools import combinations
 from gbd_eval import tables
+from gbd_eval.util import name
 
 def pscore(df: pd.DataFrame, solvers: list[str]):
     return df[solvers].min(axis=1).mean()
@@ -40,12 +41,13 @@ def generate_portfolios(df: pd.DataFrame, solvers: list[str], max_k: int = 3, wi
 
 def portfolios(df: pd.DataFrame, solvers: list[str], max_k: int = 8, max_size=3, width: int = 10, to_latex: str = None):
     pfs = generate_portfolios(df, solvers, max_k, width)
-    structured = { (len(tup), ", ".join(tup)): score for portfolios in pfs for (tup, score) in portfolios[:max_size] }
+    structured = { (len(tup), ", ".join([name(t) for t in tup])): score for portfolios in pfs for (tup, score) in portfolios[:max_size] }
     df = pd.DataFrame(structured, index=["score"]).transpose()
     df.index.names = ["k", "portfolio"]
     df.reset_index(inplace=True)
     s = df.style.format(precision=2, subset=["score"])
     s.hide(axis="index")
-    s = s.format(tables.column4latex, subset=["portfolio"]).format_index(tables.header4latex, axis=1)
+    #s = s.format(tables.column4latex, subset=["portfolio"])
+    s = s.format_index(tables.header4latex, axis=1)
     s.to_latex(to_latex, hrules=True, clines="all;data", column_format="l|p{.9\linewidth}r")
     return df
