@@ -15,7 +15,7 @@
 # run: ./eval.py
 
 from gbd_core.api import GBD
-from gbd_eval import scatter, cactus, retrieve, scores, tables
+from gbd_eval import scatter, cactus, retrieve, scores, tables, portfolio
 
 ### Solver Names:
 #[ "AMSAT_", "CaDiCaL_vivinst", "Cadical_ESA", "Cadical_rel_1_5_3_Scavel", "Kissat_Inc_ESA", 
@@ -50,9 +50,10 @@ def generate_scatter_plot(gbd: GBD, solver0: str, solver1: str, name: str):
     scatter.scatter(df, solver0, solver1, "family", logscale=False, to_latex="gen/sc2023/{}.pdf".format(name))
     scatter.scatter(df, solver0, solver1, "family", logscale=True, to_latex="gen/sc2023/{}_logscale.pdf".format(name))
 
-def generate_family_wise_score_tables(gbd: GBD, solver0: str, solver1: str, name: str):
+def generate_family_wise_score_tables(gbd: GBD, solver0: str, solver1: str, name: str, vbs_from: list[str] = None):
     df = retrieve.retrieve_penalized_augmented_runtimes(gbd, [ solver0, solver1 ], ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
-    vbs = retrieve.retrieve_virtual_best_solver(gbd, [ solver0, solver1 ], "track = main_2023")
+    all = vbs_from or [ solver0, solver1 ]
+    vbs = retrieve.retrieve_virtual_best_solver(gbd, all, "track = main_2023")
     df = df.merge(vbs, on='hash', how='left')
     tab = scores.scores_group_wise(df, [ solver0, solver1 ], ["family"], sortby="diff")
     tables.table(tab, [ solver0, solver1, "vbs" ], ["family"], "gen/sc2023/{}.tex".format(name), 
@@ -66,14 +67,19 @@ def generate_cdf_per_family(gbd: GBD, solvers: list[str]):
         cactus.cdf(subdf, solvers, title=fam, num=7, 
                     #legend_separate="gen/sc2023/cdfs/leg-{}.pdf".format(fam), 
                     to_latex="gen/sc2023/cdfs/cdf-{}.pdf".format(fam))
+        
+def generate_portfolio_scores(gbd: GBD, solvers: list[str]):
+    df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
+    portfolio.portfolios(df, solvers, 5)
 
 
 def generate():
     dbs = [ 'data/meta.db', 'data/sc2023/results_special_detailed.csv' ]
     with GBD(dbs) as gbd:
         all = get_solvers(gbd, 'results_special_detailed_csv')
-        # generate_cdf_and_cactus_plots(gbd, all)
-        # generate_cdf_per_family(gbd, all)
+        generate_cdf_and_cactus_plots(gbd, all)
+        #generate_cdf_per_family(gbd, all)
+        # generate_portfolio_scores(gbd, all)
 
         pairs_to_compare = {
             "sbva_cadical_kissat": [ "SBVA_sbva_cadical", "SBVA_sbva_kissat" ],
@@ -82,5 +88,5 @@ def generate():
         }
         for name, solvers in pairs_to_compare.items():
             generate_scatter_plot(gbd, solvers[0], solvers[1], name)
-            generate_family_wise_score_tables(gbd, solvers[0], solvers[1], name)
+            generate_family_wise_score_tables(gbd, solvers[0], solvers[1], name, vbs_from=all)
         
