@@ -16,10 +16,36 @@
 
 import pandas as pd
 from itertools import combinations
+from gbd_eval import tables
 
-def get_portfolio_scores(df: pd.DataFrame, solvers: list[str], k: int):
-    return [ (str(list(comb)), df[list(comb)].min(axis=1).mean()) for comb in combinations(solvers, k) ]
+def pscore(df: pd.DataFrame, solvers: list[str]):
+    return df[solvers].min(axis=1).mean()
 
-def portfolios(df: pd.DataFrame, solvers: list[str], max_k: int, width: int = 10):
-    for k in range(1, max_k+1):
-        print(get_portfolio_scores(df, solvers, k))
+def pscores_all(df: pd.DataFrame, solvers: list[str], k: int):
+    return sorted([ (comb, pscore(df, list(comb))) for comb in combinations(solvers, k) ], key=lambda k : k[1])
+
+def pscores_ext(df: pd.DataFrame, solvers: list[str], tuples: list[tuple[str]]):
+    tupset = set(frozenset(comb + (s,)) for comb in tuples for s in solvers if s not in comb)
+    return sorted([ (tuple(comb), pscore(df, list(comb))) for comb in tupset ], key=lambda k : k[1])
+
+def generate_portfolios(df: pd.DataFrame, solvers: list[str], max_k: int = 3, width: int = 10):
+    pfs = [ pscores_all(df, solvers, 1)[:width], pscores_all(df, solvers, 2)[:width] ]
+    for _ in range(3, max_k):
+        pfs.append(pscores_ext(df, solvers, [p[0] for p in pfs[-1]])[:width])
+    # sort solvers in tuples by occurence in portfolios:
+    occ = { s: [ t for pf in pfs for p in pf for t in p[0] ].count(s) for s in solvers }
+    pfs = [ [ (tuple(sorted(p[0], key=lambda s : occ[s], reverse=True)), p[1]) for p in pf ] for pf in pfs ]
+    return pfs
+
+
+def portfolios(df: pd.DataFrame, solvers: list[str], max_k: int = 8, max_size=3, width: int = 10, to_latex: str = None):
+    pfs = generate_portfolios(df, solvers, max_k, width)
+    structured = { (len(tup), ", ".join(tup)): score for portfolios in pfs for (tup, score) in portfolios[:max_size] }
+    df = pd.DataFrame(structured, index=["score"]).transpose()
+    df.index.names = ["k", "portfolio"]
+    df.reset_index(inplace=True)
+    s = df.style.format(precision=2, subset=["score"])
+    s.hide(axis="index")
+    s = s.format(tables.column4latex, subset=["portfolio"]).format_index(tables.header4latex, axis=1)
+    s.to_latex(to_latex, hrules=True, clines="all;data", column_format="l|p{.9\linewidth}r")
+    return df

@@ -70,23 +70,25 @@ def generate_cdf_per_family(gbd: GBD, solvers: list[str]):
         
 def generate_portfolio_scores(gbd: GBD, solvers: list[str]):
     df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
-    portfolio.portfolios(df, solvers, 5)
+    pfs = portfolio.portfolios(df, solvers, to_latex="gen/sc2023/portfolios.tex")
 
 
 def generate():
-    dbs = [ 'data/meta.db', 'data/sc2023/results_special_detailed.csv' ]
+    analyze= ('data/sc2023/results_main_detailed.csv', 'results_main_detailed_csv')
+    analyze= ('data/sc2023/results_special_detailed.csv', 'results_special_detailed_csv')
+    dbs = [ 'data/meta.db', analyze[0] ]
     with GBD(dbs) as gbd:
-        all = get_solvers(gbd, 'results_special_detailed_csv')
-        generate_cdf_and_cactus_plots(gbd, all)
+        all = get_solvers(gbd, analyze[1])
+        #generate_cdf_and_cactus_plots(gbd, all)
         #generate_cdf_per_family(gbd, all)
-        # generate_portfolio_scores(gbd, all)
+        generate_portfolio_scores(gbd, all)
 
         pairs_to_compare = {
             "sbva_cadical_kissat": [ "SBVA_sbva_cadical", "SBVA_sbva_kissat" ],
             "sbva_cadical_breakid": [ "SBVA_sbva_cadical", "BreakID_kissat_low_sh" ],
             "Cadical_vivinst_Kissat_310": [ "CaDiCaL_vivinst", "kissat_3_1_0" ],
         }
-        for name, solvers in pairs_to_compare.items():
-            generate_scatter_plot(gbd, solvers[0], solvers[1], name)
-            generate_family_wise_score_tables(gbd, solvers[0], solvers[1], name, vbs_from=all)
+        # for name, solvers in pairs_to_compare.items():
+        #     generate_scatter_plot(gbd, solvers[0], solvers[1], name)
+        #     generate_family_wise_score_tables(gbd, solvers[0], solvers[1], name, vbs_from=all)
         
