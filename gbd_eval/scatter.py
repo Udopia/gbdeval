@@ -56,7 +56,7 @@ def depenalize(df: pd.DataFrame, solvers: list[str], max=5000):
         df.loc[df[name] > max, name] = max
     return df
 
-def scatter(df: pd.DataFrame, solver1, solver2, groupcol, title=None, max=5000, legend_separate=None, to_latex=None, logscale=False):
+def scatter(df: pd.DataFrame, solver1, solver2, groupcol, title=None, max=5000, legend_separate=None, to_latex=None, logscale=False, print_delta=False):
     colors = ['#113377','#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#a65628']
     markers = [ '1', 'x', '*', '+', '.' ]
     fig, ax = plt.subplots(figsize=(3.5,3.5))
@@ -89,7 +89,10 @@ def scatter(df: pd.DataFrame, solver1, solver2, groupcol, title=None, max=5000, 
         c = colors[i % len(colors)]
         fdf = df.loc[df[groupcol] == group]
         gdelta = "{:.2f}".format(gf.loc[gf[groupcol] == group]["diff"].values[0])
-        ax.scatter(fdf[solver1], fdf[solver2], color=c, marker=m, s=30, alpha=.7, linewidth=.7, zorder=i, label=group + " ($\Delta_{xy}=$" + gdelta + ")")
+        title = name(group)
+        if print_delta:
+            title = title + " ($\Delta_{xy}=$" + gdelta + ")"
+        ax.scatter(fdf[solver1], fdf[solver2], color=c, marker=m, s=30, alpha=.7, linewidth=.7, zorder=i, label=title)
 
     ax.set_aspect('equal', 'box')
     lege = ax.legend(loc='center left', bbox_to_anchor=(1.0, .5), ncol=1, frameon=False, fontsize='xx-small', borderaxespad=0, columnspacing=0, labelspacing=.3)

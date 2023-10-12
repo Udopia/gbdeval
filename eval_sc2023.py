@@ -12,6 +12,7 @@
 # The above copyright notice and this permission notice shall be included in all
 # copies or substantial portions of the Software.
 
+#!/usr/bin/python3
 # run: ./eval.py
 
 from gbd_core.api import GBD
@@ -33,11 +34,6 @@ from gbd_eval import scatter, cactus, retrieve, scores, tables, portfolio
 # "kissat_hywalk_exp", "kissat_hywalk_exp_gb", "kissat_hywalk_gb" ]
 ###
 
-def get_solvers(gbd: GBD, dbname: str):
-    all = gbd.get_features(dbname)
-    all.remove('hash')
-    return all
-
 def generate_cdf_and_cactus_plots(gbd: GBD, solvers: list[str]):
     df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
     vbs = retrieve.retrieve_virtual_best_solver(gbd, solvers, "track = main_2023")
@@ -50,14 +46,13 @@ def generate_scatter_plot(gbd: GBD, solver0: str, solver1: str, name: str):
     scatter.scatter(df, solver0, solver1, "family", logscale=False, to_latex="gen/sc2023/{}.pdf".format(name))
     scatter.scatter(df, solver0, solver1, "family", logscale=True, to_latex="gen/sc2023/{}_logscale.pdf".format(name))
 
-def generate_family_wise_score_tables(gbd: GBD, solver0: str, solver1: str, name: str, vbs_from: list[str] = None):
-    df = retrieve.retrieve_penalized_augmented_runtimes(gbd, [ solver0, solver1 ], ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
-    all = vbs_from or [ solver0, solver1 ]
+def generate_family_wise_score_tables(gbd: GBD, solvers: list[str], name: str, vbs_from: list[str] = None):
+    df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
+    all = vbs_from or solvers
     vbs = retrieve.retrieve_virtual_best_solver(gbd, all, "track = main_2023")
     df = df.merge(vbs, on='hash', how='left')
-    tab = scores.scores_group_wise(df, [ solver0, solver1 ], ["family"], sortby="diff")
-    tables.table(tab, [ solver0, solver1, "vbs" ], ["family"], "gen/sc2023/{}.tex".format(name), 
-                 bold_min_of=[ solver0, solver1 ])
+    tab = scores.scores_group_wise(df, solvers, ["family"], sortby="diff")
+    tables.table(tab, solvers + [ "vbs" ], ["family"], "gen/sc2023/{}.tex".format(name), bold_min_of=solvers, min_diff=200)
     
 def generate_cdf_per_family(gbd: GBD, solvers: list[str]):
     df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
@@ -69,26 +64,33 @@ def generate_cdf_per_family(gbd: GBD, solvers: list[str]):
                     to_latex="gen/sc2023/cdfs/cdf-{}.pdf".format(fam))
         
 def generate_portfolio_scores(gbd: GBD, solvers: list[str]):
-    df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, ["family"], "track = main_2023", max_runtime=5000, min_group_size=5)
-    pfs = portfolio.portfolios(df, solvers, to_latex="gen/sc2023/portfolios.tex")
+    df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, [], "track=main_2023", max_runtime=5000)
+    pfs = portfolio.generate_portfolios(df, solvers, max_k=4)
+    tables.portfolios(pfs, "gen/sc2023/portfolios.tex")
 
 
 def generate():
-    analyze= ('data/sc2023/results_main_detailed.csv', 'results_main_detailed_csv')
-    analyze= ('data/sc2023/results_special_detailed.csv', 'results_special_detailed_csv')
-    dbs = [ 'data/meta.db', analyze[0] ]
+    csv = 'data/sc2023/results_main_detailed.csv'
+    csv = 'data/sc2023/results_special_detailed.csv'
+    dbs = [ 'data/meta.db', csv ]
     with GBD(dbs) as gbd:
-        all = get_solvers(gbd, analyze[1])
-        #generate_cdf_and_cactus_plots(gbd, all)
-        #generate_cdf_per_family(gbd, all)
-        generate_portfolio_scores(gbd, all)
+        solvers = gbd.get_features(gbd.get_database_name(csv))
+        generate_cdf_and_cactus_plots(gbd, solvers)
+        #generate_cdf_per_family(gbd, solvers)
+        generate_portfolio_scores(gbd, solvers)
 
         pairs_to_compare = {
             "sbva_cadical_kissat": [ "SBVA_sbva_cadical", "SBVA_sbva_kissat" ],
-            "sbva_cadical_breakid": [ "SBVA_sbva_cadical", "BreakID_kissat_low_sh" ],
-            "Cadical_vivinst_Kissat_310": [ "CaDiCaL_vivinst", "kissat_3_1_0" ],
+            # "sbva_cadical_breakid": [ "SBVA_sbva_cadical", "BreakID_kissat_low_sh" ],
+            # "Cadical_vivinst_Kissat_310": [ "CaDiCaL_vivinst", "kissat_3_1_0" ],
         }
-        # for name, solvers in pairs_to_compare.items():
-        #     generate_scatter_plot(gbd, solvers[0], solvers[1], name)
-        #     generate_family_wise_score_tables(gbd, solvers[0], solvers[1], name, vbs_from=all)
+
+        for name, pair in pairs_to_compare.items():
+            generate_scatter_plot(gbd, pair[0], pair[1], name)
+            generate_family_wise_score_tables(gbd, pair, name, vbs_from=solvers)
+
+        df = retrieve.retrieve_penalized_augmented_runtimes(gbd, solvers, [], "track=main_2023", max_runtime=5000)
+        pfs = portfolio.generate_portfolios2(df, solvers, max_k=5, n_best=1)
+        b3pf = pfs.query("k == 3")["portfolio"].values[0].split(",")
+        generate_family_wise_score_tables(gbd, b3pf, "portfolio-3", vbs_from=solvers)
         
