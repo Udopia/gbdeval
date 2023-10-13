@@ -26,7 +26,7 @@ def table(df: pd.DataFrame, solvers: list[str], groups: list[str], to_latex: str
     s = df.style.format(precision=2, subset=solvers)
     s.hide(axis="index")
     s = s.format(name, subset=groups)
-    s = s.format(number, subset=solvers)
+    #s = s.format(number, subset=solvers)
     s = s.format_index(name, axis=1)
     if bold_min_of is not None:
         s = s.highlight_min(axis=1, subset=bold_min_of, props='bfseries: ;')

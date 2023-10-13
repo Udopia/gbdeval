@@ -74,7 +74,7 @@ def name(name: str):
     elif name in familydict:
         return familydict[name]
     else:
-        return name.replace("_", "\\_").title()
+        return name.replace("_", "-").title()
     
 def number(val):
     try:
