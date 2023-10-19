@@ -7,6 +7,7 @@
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+gen/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

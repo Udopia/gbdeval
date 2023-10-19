@@ -17,6 +17,7 @@
 
 import os
 import itertools
+import numpy as np
 
 from gbd_core.api import GBD
 from gbd_eval import scatter, cactus, scores, tables, util
@@ -57,8 +58,8 @@ class Generator:
     def generate_family_wise_score_table(self, solvers: list[str], name: str, vbs_from: list[str] = None):
         data = DataPreprocessor(self.gbd, self.query, solvers + ["family"])
         df = data.numeric(solvers).penalize(solvers, self.max_runtime).remainder("family").vbs(vbs_from or solvers).get()
-        tab = scores.scores_group_wise(df, solvers, ["family"], sortby="diff")
-        tables.table(tab, solvers + [ "vbs" ], ["family"], "{}/{}.tex".format(self.target_dir, name), bold_min_of=solvers, min_diff=200)
+        tab = scores.scores_group_wise(df, solvers, ["family"], sortby="quot2")
+        tables.group_wise_scores(tab, solvers + [ "vbs" ], ["family"], "{}/{}.tex".format(self.target_dir, name), bold_min_of=solvers, min_diff=0)
     
     def generate_cdf_per_family(self):
         data = DataPreprocessor(self.gbd, self.query, self.solvers + ["family"])
@@ -71,80 +72,110 @@ class Generator:
         
     def generate_portfolios_table(self):
         pfgen = Portfolios(self.gbd, self.query, self.solvers, self.max_runtime)
-        pfs = pfgen.generate(max_k=4, beam_width=10).sorted().get(n_best=3, rename=util.name)
-        tables.portfolios(pfs, "{}/portfolios.tex".format(self.target_dir))
+        pfs = pfgen.generate(max_k=5, beam_width=10).sorted().get(n_best=1, rename=util.name)
+        tables.best_k_portfolios(pfs, "{}/portfolios.tex".format(self.target_dir))
 
     def get_best_portfolio(self, size: int = 3):
         pfgen = Portfolios(self.gbd, self.query, self.solvers, self.max_runtime)
         pfs = pfgen.generate(max_k=size+1, beam_width=10).sorted().get(n_best=1)
         return pfs.query("k == {}".format(size))["portfolio"].values[0].split(",")
 
+    def get_scores_table(self, solvers: list[str], timeout_val: int = 10000):
+        data = DataPreprocessor(self.gbd, self.query, solvers)
+        df = data.numeric(solvers).penalize(solvers, self.max_runtime).vbs(solvers).get()
+        tab = scores.scores(df)
+        dfc = df[solvers + ["vbs"]].mask(lambda col: col >= timeout_val, np.nan).mask(lambda col: col < 10000, "yes").count().to_frame("solved")
+        tab = tab.merge(dfc, left_index=True, right_index=True)
+        tab.sort_values(by="score", ascending=True, inplace=True)
+        return tab
+
 
 def generate():
-    tracks = {
+    main = {
         "main": {
             "files": ['data/meta.db', 'data/sc2023/results_main_detailed.csv'],
             "timeout": 5000,
             "solvers": [],
+            "sub": "all",
+        },
+        "main-sat": {
+            "files": ['data/meta.db', 'data/sc2023/results_main_sat_detailed.csv'],
+            "timeout": 5000,
+            "solvers": [],
+            "sub": "sat",
+        },
+        "main-unsat": {
+            "files": ['data/meta.db', 'data/sc2023/results_main_unsat_detailed.csv'],
+            "timeout": 5000,
+            "solvers": [],
+            "sub": "unsat",
         },
         "special": {
             "files": ['data/meta.db', 'data/sc2023/results_special_detailed.csv'],
             "timeout": 5000,
             "solvers": [],
+            "sub": "special",
         },
+    }
+
+    parallel = {
         "parallel": {
             "files": ['data/meta.db', 'data/sc2023/results_parallel_detailed.csv'],
             "timeout": 5000,
             "solvers": [],
+            "sub": "all",
         },
+        "parallel-sat": {
+            "files": ['data/meta.db', 'data/sc2023/results_parallel_sat_detailed.csv'],
+            "timeout": 5000,
+            "solvers": [],
+            "sub": "sat",
+        },
+        "parallel-unsat": {
+            "files": ['data/meta.db', 'data/sc2023/results_parallel_unsat_detailed.csv'],
+            "timeout": 5000,
+            "solvers": [],
+            "sub": "unsat",
+        },
+    }
+
+    cloud = {
         "cloud": {
             "files": ['data/meta.db', 'data/sc2023/results_cloud_detailed.csv'],
             "timeout": 1000,
             "solvers": [],
+            "sub": "all",
         },
-        "main-parallel": {
-            "files": ['data/meta.db', 'data/sc2023/results_main_detailed.csv', 'data/sc2023/results_parallel_detailed.csv'],
-            "timeout": 5000,
-            "solvers": [],
-        },
-        "main-cloud": {
-            "files": ['data/meta.db', 'data/sc2023/results_main_detailed.csv', 'data/sc2023/results_cloud_detailed.csv'],
+        "cloud-sat": {
+            "files": ['data/meta.db', 'data/sc2023/results_cloud_sat_detailed.csv'],
             "timeout": 1000,
             "solvers": [],
+            "sub": "sat",
         },
-        "main-parallel-cloud": {
-            "files": ['data/meta.db', 'data/sc2023/results_main_detailed.csv', 'data/sc2023/results_parallel_detailed.csv', 'data/sc2023/results_cloud_detailed.csv'],
+        "cloud-unsat": {
+            "files": ['data/meta.db', 'data/sc2023/results_cloud_unsat_detailed.csv'],
             "timeout": 1000,
             "solvers": [],
-        },
-        "special-parallel": {
-            "files": ['data/meta.db', 'data/sc2023/results_special_detailed.csv', 'data/sc2023/results_parallel_detailed.csv'],
-            "timeout": 5000,
-            "solvers": [],
-        },
-        "special-cloud": {
-            "files": ['data/meta.db', 'data/sc2023/results_special_detailed.csv', 'data/sc2023/results_cloud_detailed.csv'],
-            "timeout": 1000,
-            "solvers": [],
-        },
-        "special-parallel-cloud": {
-            "files": ['data/meta.db', 'data/sc2023/results_special_detailed.csv', 'data/sc2023/results_parallel_detailed.csv', 'data/sc2023/results_cloud_detailed.csv'],
-            "timeout": 1000,
-            "solvers": [],
+            "sub": "unsat",
         },
     }
 
-    for track, data in tracks.items():
-        solvers = data["solvers"]
-        if not len(solvers):
-            solvers = [ GBD([file]).get_features() for file in data["files"][1:] ]
-            solvers = list(itertools.chain.from_iterable(solvers)) 
-            for trash in ["aresult", "vresult"]:
-                if trash in solvers:
-                    solvers.remove(trash)
-        gen = Generator("track = main_2023", data["files"], solvers, "gen/sc2023/{}".format(track), data['timeout'])
-        gen.generate_cdf_plot()
-        gen.generate_portfolios_table()
-        portfolio = gen.get_best_portfolio()
-        gen.generate_family_wise_score_table(portfolio, "portfolio-{}".format(len(portfolio)), vbs_from=portfolio)
+    for tracks in [ main, parallel, cloud ]:
+        tab = None
+        for track, data in tracks.items():
+            solvers = data["solvers"]
+            if not len(solvers):
+                solvers = [ GBD([file]).get_features() for file in data["files"][1:] ]
+                solvers = list(itertools.chain.from_iterable(solvers)) 
+                for trash in ["aresult", "vresult"]:
+                    if trash in solvers:
+                        solvers.remove(trash)
+            gen = Generator("track = main_2023", data["files"], solvers, "gen/sc2023/{}".format(track), data['timeout'])
+            subtab = gen.get_scores_table(solvers, timeout_val=data['timeout']*2)
+            tab = subtab if tab is None else tab.merge(subtab, left_index=True, right_index=True, suffixes=("", "_{}".format(data["sub"])))
+        print(tab)
+        #tab.reset_index(inplace=True, drop=True)
+        target = "gen/sc2023/{}/overall".format(list(tracks.keys())[0])
+        tables.scores(tab, to_latex="{}.tex".format(target), to_html="{}.html".format(target))
+        #exit()
         

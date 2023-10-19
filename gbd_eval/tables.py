@@ -19,24 +19,34 @@ import pandas as pd
 from gbd_eval.util import name, number
 
 
-def table(df: pd.DataFrame, solvers: list[str], groups: list[str], to_latex: str, bold_min_of: list[str] = None, min_diff=0):
+def scores(df: pd.DataFrame, to_latex: str = None, to_html: str = None):
+    s = df.style.format(precision=2)
+    s = s.format_index(name, axis=0).format_index(name, axis=1)
+    if to_html is not None:
+        s.to_html(to_html)
+    if to_latex is not None:
+        s.to_latex(to_latex, hrules=True, clines="skip-last;index", column_format="l|" + "r" * df.shape[1])
+
+
+def group_wise_scores(df: pd.DataFrame, solvers: list[str], groups: list[str], to_latex: str, bold_min_of: list[str] = None, min_diff=0):
     df["diff"] = df[solvers].max(axis=1) - df[solvers].min(axis=1)
     df = df.query("diff >= @min_diff").copy()
     df.drop(columns=["diff"], inplace=True)
+
     s = df.style.format(precision=2, subset=solvers)
     s.hide(axis="index")
     s = s.format(name, subset=groups)
-    #s = s.format(number, subset=solvers)
     s = s.format_index(name, axis=1)
     if bold_min_of is not None:
         s = s.highlight_min(axis=1, subset=bold_min_of, props='bfseries: ;')
+    
     sformat = "r"
     width = "{:.2f}".format(.6 / len(solvers))
     sformat = ">{\\raggedleft\\arraybackslash}p{" + width + "\linewidth}"
-    s.to_latex(to_latex, hrules=True, clines="all;data", column_format="l" * len(groups) + "r|" + sformat * (len(solvers)-1) + "|" + sformat)
+    s.to_latex(to_latex, hrules=True, clines="all;data", column_format="l" * len(groups) + "r|" + sformat * (len(solvers)-1) + "|r")
 
 
-def portfolios(df: pd.DataFrame, to_latex: str):
+def best_k_portfolios(df: pd.DataFrame, to_latex: str):
     s = df.style.format(precision=2, subset=["score"])
     s.hide(axis="index")
     s = s.format_index(name, axis=1)

@@ -3,20 +3,21 @@ import sys
 sc2023dict = {
     "vbs": "VBS",
     "count": "\#",
+    # Solvers in Main Track:
     "AMSAT_": "AMSAT",
     "CaDiCaL_vivinst": "Cadical vivinst",
     "Cadical_ESA": "Cadical ESA",
     "Cadical_rel_1_5_3_Scavel": "Cadical Scavel",
     "Kissat_Inc_ESA": "KissatInc-ESA",
-    "Kissat_MAB_Binary": "KissatMAB-Binary",
-    "Kissat_MAB_Conflict": "KissatMAB-Conflict",
-    "Kissat_MAB_Conflict_": "KissatMAB-Conflict",
-    "Kissat_MAB_DeepWalk_": "KissatMAB-DeepWalk",
-    "Kissat_MAB_ESA": "KissatMAB-ESA",
-    "Kissat_MAB_Rephases": "KissatMAB-Rephases",
-    "Kissat_MAB_prop": "KissatMAB Prop",
-    "Kissat_MAB_prop_no_sym": "KissatMAB PropNos",
-    "Kissat_MAB_prop_pr_no_sym": "KissatMAB PropPrNos",
+    "Kissat_MAB_Binary": "KissatMab-Binary",
+    "Kissat_MAB_Conflict": "KissatMab-Conflict",
+    "Kissat_MAB_Conflict_": "KissatMab-Conflict",
+    "Kissat_MAB_DeepWalk_": "KissatMab-DeepWalk",
+    "Kissat_MAB_ESA": "KissatMab-ESA",
+    "Kissat_MAB_Rephases": "KissatMab-Rephases",
+    "Kissat_MAB_prop": "KissatMabProp",
+    "Kissat_MAB_prop_no_sym": "KissatMabProp Nosym",
+    "Kissat_MAB_prop_pr_no_sym": "KissatMabProp PrNosym",
     "MapleCaDiCaL_LBD_990_275": "MapleCadical LBD-990-275",
     "MapleCaDiCaL_LBD_990_500": "MapleCadical LBD-990-500",
     "MapleCaDiCaL_PPD_500_500": "MapleCadical PPD-500-500",
@@ -45,6 +46,26 @@ sc2023dict = {
     "kissat_hywalk_exp": "Kissat-hywalk-exp",
     "kissat_hywalk_exp_gb": "Kissat-hywalk-exp-gb",
     "kissat_hywalk_gb": "Kissat-hywalk-gb",
+    # Solvers in Cloud Track:
+    "satcomp_mallob": "Mallob1600",
+    "satcomp_prs_distributed": "PRS~Dist",
+    "satcomp_solimul_cloud": "Mallob1600 (solimul)",
+    # Solvers in Parallel Track:
+    "dps_satcomp2023": "DPS",
+    "nps_satcomp2023": "NPS", 
+    "gimsatul": "Gimsatul", 
+    "Mallob23_parallel_1": "Mallob32", 
+    "mallob23_parallel_2": "Mallob64", 
+    "pahkis23": "PahKis", 
+    "pakisinc23": "PahKis inc", 
+    "satcomp_mergesat": "Mergesat", 
+    "satcomp_nopre_prs": "PRS nopre", 
+    "satcomp_pkisds": "pKisDs", 
+    "satcomp_pkisds_step": "pKisDs step",
+    "satcomp_pkissat": "pKissat",
+    "satcomp_pkissat_str": "pKissat str",
+    "satcomp_prs": "PRS",
+    "satcomp_solimul_parallel": "Mallob (solimul)",
 }
 
 familydict = {
@@ -73,8 +94,10 @@ def name(name: str):
         return sc2023dict[name]
     elif name in familydict:
         return familydict[name]
-    else:
+    elif isinstance(name, str):
         return name.replace("_", "-").title()
+    else:
+        return number(name)
     
 def number(val):
     try:
