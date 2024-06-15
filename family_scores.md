@@ -1,0 +1,27 @@
+| family                       |   count |   Kissat_MAB_prop_pr_no_sym |   SBVA_sbva_cadical |   BreakID_kissat_low_sh |
+|:-----------------------------|--------:|----------------------------:|--------------------:|------------------------:|
+| interval-matching            |      20 |                        0.15 |            10000.00 |                10000.00 |
+| or_randxor                   |       5 |                    10000.00 |               21.82 |                  103.93 |
+| hashtable-safety             |      20 |                      194.75 |              797.46 |                10000.00 |
+| satcoin                      |      15 |                    10000.00 |             1395.53 |                10000.00 |
+| set-covering                 |      20 |                     5761.57 |              722.01 |                  262.39 |
+| cryptography-ascon           |      20 |                     5628.35 |              356.82 |                 2673.77 |
+| grs-fp-comm                  |      17 |                     3435.82 |             3649.90 |                 8258.64 |
+| reg-n                        |       5 |                     6295.16 |            10000.00 |                10000.00 |
+| mutilated-chessboard         |      12 |                     1656.50 |             3194.54 |                 5135.77 |
+| profitable-robust-production |      20 |                     3946.63 |             2470.42 |                 5031.37 |
+| hardware-verification        |       8 |                     1558.52 |             2832.05 |                 3964.51 |
+| register-allocation          |      20 |                        5.50 |              101.20 |                 2016.39 |
+| tseitin                      |      11 |                     8193.40 |             8196.91 |                 6393.20 |
+| social-golfer                |      20 |                     7665.62 |             7555.16 |                 9013.05 |
+| miscellaneous                |      70 |                     2563.98 |             3164.75 |                 3918.52 |
+| pigeon-hole                  |       8 |                     6381.16 |             5261.85 |                 5128.03 |
+| school-timetabling           |      19 |                     1266.09 |             1399.65 |                 2371.42 |
+| brent-equations              |      19 |                      408.33 |              232.86 |                 1133.50 |
+| miter                        |      11 |                     3157.68 |             3134.91 |                 3723.05 |
+| argumentation                |      20 |                     4144.27 |             3693.93 |                 3820.58 |
+| subsumptiontest              |       5 |                       84.60 |              230.22 |                   89.14 |
+| planning                     |       6 |                       91.26 |                6.97 |                   10.98 |
+| quasigroup-completion        |       5 |                       60.78 |                9.33 |                    3.43 |
+| cryptography                 |       7 |                     1577.96 |             1578.46 |                 1570.64 |
+| cryptography-simon           |      17 |                    10000.00 |            10000.00 |                10000.00 |
