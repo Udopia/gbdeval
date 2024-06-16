@@ -1,7 +1,11 @@
-# gbdeval
-Evaluation Scripts for GBD
+# GBD Evaluation Scripts
 
-This is here to merge and generalize some of the evaluation scripts built on top of GBD. 
+The scripts and notebooks in this repository demonstrate use cases of GBD's Python interface.
 
-An example is can be found in `eval.py` or `eval_sc2023.py` which contains the code to generate the plots and tables in `eval.tex`. 
+## Evaluation Demo
 
+The [evaluation demo](demo_evaluation.md) demonstrates portfolio analysis and subsequent category-wise performance evaluation using the 2023 SAT competition data.
+
+## Prediction Demo
+
+The [prediction demo](demo_prediction.md) demonstrates category prediction from instance features and subsequent feature importance evaluation.
