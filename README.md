@@ -1,6 +1,6 @@
 # GBD Evaluation Scripts
 
-The scripts and notebooks in this repository demonstrate use cases of GBD's Python interface.
+The scripts and notebooks in this [repository](https://github.com/Udopia/gbdeval) demonstrate use cases of GBD's Python interface.
 
 ## Evaluation Demo
 
